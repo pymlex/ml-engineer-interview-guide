@@ -19,11 +19,13 @@ Decoding генерирует дальше по одному токену. На 
 
 Объём кэша в float16:
 
-$$
+
+```math
 \mathrm{Mem}_{\mathrm{KV}}
 \approx
 2\cdot b\cdot n\cdot L\cdot h_{\mathrm{kv}}\cdot d_k\cdot 2\ \text{байт}.
-$$
+```
+
 
 Здесь первый множитель $2$ учитывает ключи и значения, $b$ — размер batch, $n$ — текущая длина последовательности, $L$ — число слоёв, $h_{\mathrm{kv}}$ — число KV-голов, $d_k$ — размерность головы, последний множитель $2$ — число байт на параметр float16.
 
@@ -37,9 +39,11 @@ GQA уменьшает $h_{\mathrm{kv}}$. Квантизация KV уменьш
 
 На шаге модель выдаёт логиты $z\in\mathbb{R}^{|V|}$ по словарю размера $|V|$. Распределение с температурой $T>0$:
 
-$$
+
+```math
 p_i=\frac{e^{z_i/T}}{\sum_{j=1}^{|V|}e^{z_j/T}}.
-$$
+```
+
 
 При $T\to 0$ масса схлопывается к $\arg\max_i z_i$. При большом $T$ распределение сглаживается и энтропия растёт.
 
@@ -87,9 +91,11 @@ ZeRO убирает избыточность состояний в режиме 
 
 Полное дообучение всех весов дорого по памяти оптимизатора. LoRA замораживает предобученный вес $W\in\mathbb{R}^{d_{\mathrm{out}}\times d_{\mathrm{in}}}$ и учит низкоранговое обновление
 
-$$
+
+```math
 W'=W+\frac{\alpha}{r}BA,
-$$
+```
+
 
 где $B\in\mathbb{R}^{d_{\mathrm{out}}\times r}$, $A\in\mathbb{R}^{r\times d_{\mathrm{in}}}$, ранг $r\ll\min(d_{\mathrm{in}},d_{\mathrm{out}})$, коэффициент $\alpha$ масштабирует шаг. Обучают только $A$ и $B$. Несколько задач — несколько адаптеров при одной базе.
 
@@ -105,7 +111,8 @@ Prefix Tuning оптимизирует непрерывные префиксы �
 
 Целевой функционал RLHF для политики $\pi_\theta$ с референсной моделью $\pi_{\mathrm{ref}}$, обычно SFT-моделью:
 
-$$
+
+```math
 \max_{\pi}\ 
 \mathbb{E}_{x\sim\mathcal{D},\,y\sim\pi(\cdot\mid x)}\bigl[r_\phi(x,y)\bigr]
 -\beta\,
@@ -113,7 +120,8 @@ $$
 \bigl[
 \mathrm{KL}\bigl(\pi(\cdot\mid x)\,\|\,\pi_{\mathrm{ref}}(\cdot\mid x)\bigr)
 \bigr].
-$$
+```
+
 
 Первый член тянет к высокой награде. Второй запрещает уход в области, где reward-модель ненадёжна. PPO реализует оптимизацию через сэмплирование траекторий, value-сеть и clipped updates.
 
@@ -123,34 +131,42 @@ $$
 
 Для фиксированного $x$ рассмотрим функционал на распределениях $\pi$ по ответам:
 
-$$
+
+```math
 J(\pi)
 =\mathbb{E}_{y\sim\pi}\bigl[r(x,y)\bigr]
 -\beta\,\mathrm{KL}\bigl(\pi\,\|\,\pi_{\mathrm{ref}}(\cdot\mid x)\bigr).
-$$
+```
+
 
 Его оптимум имеет вид
 
-$$
+
+```math
 \pi^*(y\mid x)
 =\frac{1}{Z(x)}
 \pi_{\mathrm{ref}}(y\mid x)
 \exp\Bigl(\frac{1}{\beta}r(x,y)\Bigr),
-$$
+```
+
 
 где нормировочная константа
 
-$$
+
+```math
 Z(x)=\sum_{y}\pi_{\mathrm{ref}}(y\mid x)\exp\bigl(r(x,y)/\beta\bigr).
-$$
+```
+
 
 Логарифмирование даёт выражение награды через оптимальную политику:
 
-$$
+
+```math
 r(x,y)
 =\beta\log\frac{\pi^*(y\mid x)}{\pi_{\mathrm{ref}}(y\mid x)}
 +\beta\log Z(x).
-$$
+```
+
 
 
 ### Bradley–Terry и потеря DPO
@@ -158,31 +174,37 @@ $$
 
 Модель предпочтений Bradley–Terry постулирует
 
-$$
+
+```math
 P(y_w\succ y_l\mid x)
 =\sigma\bigl(r(x,y_w)-r(x,y_l)\bigr),
-$$
+```
+
 
 где $\sigma$ — логистическая сигмоида. Подстановка выражения для $r$ сокращает слагаемое $\beta\log Z(x)$ в разности. Остаётся
 
-$$
+
+```math
 P(y_w\succ y_l\mid x)
 =\sigma\Bigl(
 \beta\log\frac{\pi^*(y_w\mid x)}{\pi_{\mathrm{ref}}(y_w\mid x)}
 -\beta\log\frac{\pi^*(y_l\mid x)}{\pi_{\mathrm{ref}}(y_l\mid x)}
 \Bigr).
-$$
+```
+
 
 DPO заменяет неизвестную $\pi^*$ на параметризованную политику $\pi_\theta$ и минимизирует отрицательный логарифм правдоподобия пар предпочтений:
 
-$$
+
+```math
 \mathcal{L}_{\mathrm{DPO}}
 =-\mathbb{E}_{(x,y_w,y_l)}
 \log\sigma\Bigl(
 \beta\log\frac{\pi_\theta(y_w\mid x)}{\pi_{\mathrm{ref}}(y_w\mid x)}
 -\beta\log\frac{\pi_\theta(y_l\mid x)}{\pi_{\mathrm{ref}}(y_l\mid x)}
 \Bigr).
-$$
+```
+
 
 Явная reward-модель не нужна. Это смена переменных в том же KL-регуляризованном функционале, а не отдельная эвристика вместо PPO. Цена — обучение offline на фиксированных парах без онлайн-сэмплирования из текущей политики. При долгом обучении распределение пар может расходиться с текущей $\pi_\theta$.
 
