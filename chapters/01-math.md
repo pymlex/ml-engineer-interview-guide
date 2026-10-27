@@ -330,3 +330,11 @@ X^\top X\,\hat w=X^\top\mathbf{y}.
 $$
 
 Матрица $X^\top X$ с точностью до множителя $2$ есть гессиан квадратичной потери. Если столбцы $X$ линейно зависимы, ранг $X^\top X$ падает и решение OLS неединственно. Переход к MAP с гауссовским априорным распределением заменяет систему на $(X^\top X+\lambda I)\hat w=X^\top\mathbf{y}$ и снимает вырожденность сдвигом спектра на $\lambda$.
+
+
+## Источники
+
+
+- Bishop C. M. Pattern Recognition and Machine Learning. Главы о MLE, MAP и линейной регрессии
+- Hastie T., Tibshirani R., Friedman J. The Elements of Statistical Learning
+- Материалы [machinelearning.ru](http://www.machinelearning.ru/)
